@@ -1,0 +1,81 @@
+= smart_assets
+
+== Summary
+
+This is a plugin for Ruby on Rails that dynamically includes stylesheet and javascript
+files based on the current controller and action as well as the parent controller and
+current layout. Also lets you add stylesheet and javascript files to your <head>
+tag at runtime.
+
+= What's this all about?
+
+So maybe you're designing a Rails app, and you enjoy the whole MVC thing and how
+everything's structured, and you like how you can incorporate Ruby into your views,
+and life is generally grand.
+
+Except for the fact that your views are a mish-mash of CSS and HTML, or maybe they're
+not, but your application.css is like 1000 lines long and refers to classes and ids
+that are scattered across your views. "You know," you say to yourself, "I wish I
+could somehow split them up based on controller and possibly view."
+
+Smart assets to the rescue! All you have to is reach inside your layout and add
+
+  <%= smart_asset_includes %>
+  
+and the stylesheet(s) that correspond to the current controller and action will be
+dynamically included when the page is loaded.
+
+It just so happens that the same thing actually applies to Javascript files as well.
+So you can get rid of this line too:
+
+  <%= javascript_include_tag :defaults %>
+
+Time for an example. Let's say you have a FooController which inherits from a
+BaseController, and in it you have an "index" action which is rendered using the "main"
+laout. When it's called, the following files will be included, if they exist:
+
+  - public/stylesheets/application.css
+  - public/stylesheets/base.css
+  - public/stylesheets/foo.css
+  - public/stylesheets/foo/index.css
+  - public/stylesheets/layouts/main.css
+  - public/javascripts/application.js
+  - public/javascripts/base.js
+  - public/javascripts/foo.js
+  - public/javascripts/foo/index.js
+  - public/stylesheets/layouts/main.js
+  
+So if you want to share a stylesheet between two views in the same controller, you
+just create a stylesheet for that controller (e.g. public/stylesheets/foo.css). If
+just for a view, create one for the view (e.g. public/stylesheets/foo/index.css).
+
+But what if you want to share a stylesheet between two controllers? You could add the
+code to application.css, but that still might clutter up your CSS. But smart_assets
+has got a solution for that too. Let's say the two controllers are FooController and
+BarController. Simply create public/stylesheets/foo--bar.css and smart_assets knows
+when to include them.
+
+What else can smart_assets do? Include stylesheets or javascripts at runtime, of
+course!
+
+  class FooController < ActionController::Base
+    def do_something_cool
+      # stuff goes here...
+      add_to_stylesheets( some_boolean_method? ? 'pink' : 'black' )
+    end
+  end
+  
+This will include public/stylesheets/foo/pink.css or public/stylesheets/foo/black.css
+depending on the return value of #some_boolean_method?.
+
+Note that if we wanted to include e.g. public/stylesheets/black.css instead, we could
+do:
+
+  add_to_stylesheets( some_boolean_method? ? '/pink' : '/black' )
+  
+And that's all!
+
+== Author
+
+(c) 2007-2008 Elliot Winkler (elliot dot winkler at gmail dot com). Released under
+the MIT license.
