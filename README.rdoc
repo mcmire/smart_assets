@@ -7,7 +7,7 @@ files based on the current controller and action as well as the parent controlle
 current layout. Also lets you add stylesheet and javascript files to your <head>
 tag at runtime.
 
-= What's this all about?
+== What's this all about?
 
 So maybe you're designing a Rails app, and you enjoy the whole MVC thing and how
 everything's structured, and you like how you can incorporate Ruby into your views,
