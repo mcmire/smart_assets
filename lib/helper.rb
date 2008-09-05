@@ -88,11 +88,11 @@ module Mcmire
     
       def generate_basenames
         # Include application.css
-        basenames = [ 'application' ]
+        basenames = Set.new(['application'])
       
         # Each layout gets its own file
         layout = response.layout
-        basenames << layout# unless basenames.include? layout
+        basenames << layout if layout
       
         klass = controller.class
       
