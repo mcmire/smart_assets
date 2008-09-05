@@ -1,14 +1,18 @@
 module Mcmire
   module SmartAssets
     module Helper
+      # Put this in your layout file to automatically include stylesheets and
+      # javascript files based on current controller and action.
       #
-      # Automatically includes stylesheets and javascript files based on current
-      #  controller and action.
-      # (Call this in your layout file.)
+      # You can tell smart_assets not to load certain stylesheets or javascripts
+      # by passing a hash with an :except key. For instance:
       #
-      def smart_asset_includes
+      #  smart_asset_includes :except => 'application'  # both css and js
+      #  smart_asset_includes :except => 'lib/prototype.js'
+      #  smart_asset_includes :except => 'foo/bar.css'
+      def smart_asset_includes(options = {})
         out = ""
-        stylesheets_to_try, javascripts_to_try = gather_paths_to_try
+        stylesheets_to_try, javascripts_to_try = gather_paths_to_try(options)
         # Include stylesheets
         # Note that by default, stylesheets apply to just media=screen
         # You can specify the medium by adding _all or _print to the end of the filename
@@ -66,8 +70,26 @@ module Mcmire
       end
     
     private
-      def gather_paths_to_try
+      def gather_paths_to_try(options)
+        global_exceptions = []
+        js_exceptions = []
+        css_exceptions = []
+        if exceptions = options[:except]
+          exceptions = [exceptions].flatten
+          for path in exceptions
+            (case path
+              when /\.js$/i then js_exceptions
+              when /\.css$/i then css_exceptions
+              else global_exceptions
+            end) << path.sub(/\.[^.]+$/i, '')
+          end
+        end
+        
         basenames = generate_basenames()
+        
+        # Remove unwanted stuff
+        basenames -= global_exceptions
+        
         stylesheet_basenames = basenames.dup
         javascript_basenames = basenames.dup
       
@@ -78,10 +100,10 @@ module Mcmire
         # You can also specify that certain files are to apply to multiple controllers
         stylesheet_basenames += multicontroller_basenames_for(:stylesheets)
         javascript_basenames += multicontroller_basenames_for(:javascripts)
-      
-        # Remove duplicate entries
-        stylesheet_basenames.uniq!
-        javascript_basenames.uniq!
+        
+        # Remove unwanted stuff, specifically
+        stylesheet_basenames -= css_exceptions
+        javascript_basenames -= js_exceptions
       
         [stylesheet_basenames, javascript_basenames]
       end
