@@ -31,10 +31,6 @@ module Mcmire
             end
           end
         end
-        # Include Prototype, Script.aculo.us effects
-        out << "\n"
-        out << javascript_include_tag(*%w(prototype effects controls dragdrop))
-        out << "\n\n"
         # Include javascripts
         for path in javascripts_to_try
           # If bareword, assume path is an action in current controller.
@@ -104,13 +100,17 @@ module Mcmire
         # Remove unwanted stuff, specifically
         stylesheet_basenames -= css_exceptions
         javascript_basenames -= js_exceptions
+        
+        # Remove duplicate entries
+        stylesheet_basenames.uniq!
+        javascript_basenames.uniq!
       
         [stylesheet_basenames, javascript_basenames]
       end
     
       def generate_basenames
         # Include application.css
-        basenames = Set.new(['application'])
+        basenames = ['application']
       
         # Each layout gets its own file
         layout = response.layout
