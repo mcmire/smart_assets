@@ -142,21 +142,6 @@ module Mcmire
         basenames
       end
     
-      def asset_tag_if_valid_for(type, path)
-        out = ""
-        # If bareword, assume path is an action in current controller.
-        # This lets you just say e.g. add_to_stylesheets('bar') instead of
-        #  add_to_stylesheets('foo/bar').
-        unless path.include?('/') or stylesheet_exists?(path)
-          path = controller.controller_path + '/' + path
-        end
-        path.gsub! %r{^/}, ''
-        unless (code = stylesheet_link_tag_if_exists(path, :media => medium)).empty?
-          out << code << "\n"
-        end
-        out
-      end
-    
       # More documentation goes here as to what this method does, but here's some examples:
       #  * A stylesheet called 'order--checkout.css' will be included for a template belonging to any
       #    action in OrderController or CheckoutController
