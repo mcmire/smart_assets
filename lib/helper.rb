@@ -11,8 +11,35 @@ module Mcmire
       #  smart_asset_includes :except => 'lib/prototype.js'
       #  smart_asset_includes :except => 'foo/bar.css'
       def smart_asset_includes(options = {})
-        out = ""
         stylesheets_to_try, javascripts_to_try = gather_paths_to_try(options)
+        generate_html(stylesheets_to_try, javascripts_to_try)
+      end
+      
+      # Put this in your layout file to include any custom javascripts or stylesheets
+      # you've added at runtime. See +add_to_javascripts+ and +add_to_stylesheets+
+      # for more.
+      def smart_asset_runtime_includes
+        generate_html(smart_asset_options[:runtime_stylesheets], smart_asset_options[:runtime_javascripts])
+      end
+      
+      # Put this in your view or a partial to add <script> tags for the specified
+      # javascript paths to your <head> when your layout is rendered.
+      def add_to_javascripts(*args)
+        smart_asset_options[:runtime_javascripts] += args
+      end
+      # Put this in your view or a partial to add <style> tags for the specified
+      # stylesheet paths to your <head> when your layout is rendered.
+      def add_to_stylesheets(*args)
+        smart_asset_options[:runtime_stylesheets] += args
+      end
+    
+    private
+      def smart_asset_options
+        @smart_asset_options ||= { :runtime_javascripts => [], :runtime_stylesheets => [] }
+      end
+      
+      def generate_html(stylesheets_to_try, javascripts_to_try)
+        out = ""
         # Include stylesheets
         # Note that by default, stylesheets apply to just media=screen
         # You can specify the medium by adding _all or _print to the end of the filename
@@ -46,26 +73,7 @@ module Mcmire
         end
         return out
       end
-  
-      #
-      # Helpers for stylesheet and javascript inclusion
-      #
-      def stylesheet_exists?(partial_fn)
-        real_fn = (RAILS_ROOT + '/public' + stylesheet_path(partial_fn)).sub(/\?.+$/, '')
-        File.exists?(real_fn)
-      end
-      def stylesheet_link_tag_if_exists(partial_fn, options={})
-        stylesheet_exists?(partial_fn) ? stylesheet_link_tag(partial_fn, options) : ""
-      end
-      def javascript_exists?(partial_fn)
-        real_fn = (RAILS_ROOT + '/public' + javascript_path(partial_fn)).sub(/\?.+$/, '')
-        File.exists?(real_fn)
-      end
-      def javascript_include_tag_if_exists(partial_fn)
-        javascript_exists?(partial_fn) ? javascript_include_tag(partial_fn) : ""
-      end
     
-    private
       def gather_paths_to_try(options)
         global_exceptions = []
         js_exceptions = []
@@ -89,15 +97,11 @@ module Mcmire
         stylesheet_basenames = basenames.dup
         javascript_basenames = basenames.dup
       
-        # You can specify files to be included per request
-        stylesheet_basenames += controller.class.smart_asset_options[:extra_stylesheets]
-        javascript_basenames += controller.class.smart_asset_options[:extra_javascripts]
-      
-        # You can also specify that certain files are to apply to multiple controllers
+        # Add files that apply to multiple controllers
         stylesheet_basenames += multicontroller_basenames_for(:stylesheets)
         javascript_basenames += multicontroller_basenames_for(:javascripts)
         
-        # Remove unwanted stuff, specifically
+        # Remove specified files according to options
         stylesheet_basenames -= css_exceptions
         javascript_basenames -= js_exceptions
         
@@ -181,6 +185,21 @@ module Mcmire
           basenames << subdir+file  if file =~ /(^|--)#{ctlr_name}(--|$)/
         end
         basenames
+      end
+      
+      def stylesheet_exists?(partial_fn)
+        real_fn = (RAILS_ROOT + '/public' + stylesheet_path(partial_fn)).sub(/\?.+$/, '')
+        File.exists?(real_fn)
+      end
+      def stylesheet_link_tag_if_exists(partial_fn, options={})
+        stylesheet_exists?(partial_fn) ? stylesheet_link_tag(partial_fn, options) : ""
+      end
+      def javascript_exists?(partial_fn)
+        real_fn = (RAILS_ROOT + '/public' + javascript_path(partial_fn)).sub(/\?.+$/, '')
+        File.exists?(real_fn)
+      end
+      def javascript_include_tag_if_exists(partial_fn)
+        javascript_exists?(partial_fn) ? javascript_include_tag(partial_fn) : ""
       end
     end # Helper
   end # SmartAssets
